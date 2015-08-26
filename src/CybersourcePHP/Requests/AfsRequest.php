@@ -157,7 +157,14 @@ class AfsRequest extends BaseRequest
       throw new AfsException("Card information is not set");
     }
     parent::run();
-    $result = $this->_soapClient->runTransaction($this);
+    try
+    {
+      $result = $this->_soapClient->runTransaction($this);
+    }
+    catch(\Exception $e)
+    {
+      throw new AfsException("AFS Request Failed: " . $e->getMessage());
+    }
     $merchantReferenceCode = isset($result->merchantReferenceCode) ? $result->merchantReferenceCode : null;
     $reply = new AfsReply($merchantReferenceCode, $result->requestID, $result->decision, $result->reasonCode, $result->requestToken);
     //Check for errors
