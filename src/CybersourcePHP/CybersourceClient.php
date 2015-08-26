@@ -36,7 +36,7 @@ class CybersourceClient
   private function _setWSSEHeaders()
   {
     $user = new \SoapVar($this->_config->merchantID, XSD_STRING, null, $this->_config->wsseNS, null, $this->_config->wsseNS);
-    $pass = new \SoapVar($this->_config->apiKey, XSD_STRING, null, $this->_config->typeNS, null, $this->_config->typeNS);
+    $pass = new \SoapVar($this->_config->apiKey, XSD_STRING, null, $this->_config->typeNS, null, $this->_config->wsseNS);
     $username_token = new \stdClass();
     $username_token->Username = $user;
     $username_token->Password = $pass;
