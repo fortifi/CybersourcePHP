@@ -7,6 +7,7 @@ namespace CybersourcePHP;
 
 use CybersourcePHP\Exceptions\ConfigException;
 use CybersourcePHP\Requests\AfsRequest;
+use CybersourcePHP\Requests\CaseManagementActionRequest;
 use CybersourcePHP\Structs\Configuration;
 
 class CybersourceClient
@@ -51,6 +52,13 @@ class CybersourceClient
   public function afsRequest()
   {
     $request = new AfsRequest($this->_config->merchantID, "CybersourcePHP_" . time());
+    $request->setSoapClient($this->_soapClient);
+    return $request;
+  }
+
+  public function caseManagementActionRequest()
+  {
+    $request = new CaseManagementActionRequest($this->_config->merchantID, "CybersourcePHP_" . time());
     $request->setSoapClient($this->_soapClient);
     return $request;
   }

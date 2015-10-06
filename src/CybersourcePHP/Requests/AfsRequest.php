@@ -6,35 +6,77 @@
 namespace CybersourcePHP\Requests;
 
 use CybersourcePHP\Enums\CardType;
+use CybersourcePHP\Enums\ProductCodes;
 use CybersourcePHP\Exceptions\AfsException;
 use CybersourcePHP\Lookups\AvsCodes;
 use CybersourcePHP\Lookups\CvCodes;
-use CybersourcePHP\Lookups\ReasonCodes;
 use CybersourcePHP\Lookups\States;
 use CybersourcePHP\Replies\AfsReply;
-use CybersourcePHP\Structs\AddressInformationCode;
-use CybersourcePHP\Structs\DecisionReply;
-use CybersourcePHP\Structs\AfsFactorCode;
 use CybersourcePHP\Structs\BillTo;
 use CybersourcePHP\Structs\Card;
-use CybersourcePHP\Structs\DeviceFingerprint;
-use CybersourcePHP\Structs\InternetInformationCode;
-use CybersourcePHP\Structs\VelocityCode;
+use CybersourcePHP\Structs\Item;
 
 class AfsRequest extends BaseRequest
 {
   public $afsService;
   public $billTo;
   public $card;
+  public $item = array();
+  public $merchantDefinedData;
+  public $purchaseTotals;
+
   protected $_transactionType;
 
   public function __construct($merchantID, $reference, $currency = "USD")
   {
-    parent::__construct($merchantID, $reference, $currency);
+    parent::__construct($merchantID, $reference);
     $this->afsService = new \stdClass();
     $this->afsService->run = "true";
     $this->billTo = new BillTo();
+    $this->merchantDefinedData = new \stdClass();
+    $this->merchantDefinedData->mddField = array();
+    $this->purchaseTotals = new \stdClass();
+    $this->purchaseTotals->currency = $currency;
+    $this->purchaseTotals->grandTotalAmount = 0;
     $this->_transactionType = "CC";
+  }
+
+  public function addItem($price, $quantity, $productCode = ProductCodes::_default, $productName = "", $productSKU = "")
+  {
+    $item = new Item();
+    $item->id = count($this->item);
+    $item->unitPrice = $price;
+    $item->quantity = $quantity;
+    $item->productCode = $productCode;
+    $item->productName = $productName;
+    $item->productSKU = $productSKU;
+    $this->item[] = $item;
+    $this->purchaseTotals->grandTotalAmount += ($price * $quantity);
+  }
+
+
+  public function getCard()
+  {
+    return isset($this->card) ? $this->card : null;
+  }
+
+  public function getItems()
+  {
+    return $this->item;
+  }
+
+  public function getGrandTotal()
+  {
+    return $this->purchaseTotals->grandTotalAmount;
+  }
+
+  public function getPreauthCodes()
+  {
+    if(!isset($this->afsService->avsCode) || !isset($this->afsService->cvCode))
+    {
+      return null;
+    }
+    return array("avs" => $this->afsService->avsCode, "cv" => $this->afsService->cvCode);
   }
 
   public function getTransactionType()
@@ -56,22 +98,6 @@ class AfsRequest extends BaseRequest
     return isset($this->billTo) ? $this->billTo : null;
   }
 
-  public function setUserDetails($first, $last, $email, $phone, $customerID = null, $ip = null)
-  {
-    $this->billTo->firstName = $first;
-    $this->billTo->lastName = $last;
-    $this->billTo->email = $email;
-    $phone = preg_replace("/[^\d]/", "", $phone); //Make numeric
-    if(strlen($phone) < 7) //Min 7 digits
-    {
-      $phone = "";
-    }
-    $phone = substr($phone, 0, 15); //Max 15 digits
-    $this->billTo->phoneNumber = $phone;
-    $this->billTo->customerID = $customerID;
-    $this->billTo->ipAddress = ($ip == null) ? $this->getIP() : $ip;
-  }
-
   public function setAddress($street, $city, $state, $country, $postcode)
   {
     $this->billTo->street1 = $street;
@@ -87,7 +113,7 @@ class AfsRequest extends BaseRequest
       }
       else
       {
-        //Probably malformed or mis-spelt
+        //Can't find the state?
         $this->billTo->state = $state;
       }
     }
@@ -107,11 +133,6 @@ class AfsRequest extends BaseRequest
     $this->billTo->postalCode = $postcode;
   }
 
-  public function getCard()
-  {
-    return isset($this->card) ? $this->card : null;
-  }
-
   public function setCard($number, $month, $year, $type = CardType::AUTO)
   {
     $card = new Card($number, $month, $year, $type);
@@ -121,15 +142,6 @@ class AfsRequest extends BaseRequest
   public function setCardObj(Card $card)
   {
     $this->card = $card;
-  }
-
-  public function getPreauthCodes()
-  {
-    if(!isset($this->afsService->avsCode) || !isset($this->afsService->cvCode))
-    {
-      return null;
-    }
-    return array("avs" => $this->afsService->avsCode, "cv" => $this->afsService->cvCode);
   }
 
   public function setPreauthCodes($avs, $cv)
@@ -146,6 +158,23 @@ class AfsRequest extends BaseRequest
     $this->afsService->cvCode = $cv;
   }
 
+  public function setUserDetails($first, $last, $email, $phone, $customerID = null, $ip = null)
+  {
+    $this->billTo->firstName = $first;
+    $this->billTo->lastName = $last;
+    $this->billTo->email = $email;
+    $phone = preg_replace("/[^\d]/", "", $phone); //Make numeric
+    if(strlen($phone) < 7) //Min 7 digits
+    {
+      $phone = "";
+    }
+    $phone = substr($phone, 0, 15); //Max 15 digits
+    $this->billTo->phoneNumber = $phone;
+    $this->billTo->customerID = $customerID;
+    $this->billTo->ipAddress = ($ip == null) ? $this->getIP() : $ip;
+  }
+
+  //The magic
   public function run()
   {
     if($this->billTo == null || !isset($this->billTo->firstName) || !isset($this->billTo->street1))
@@ -157,99 +186,7 @@ class AfsRequest extends BaseRequest
       throw new AfsException("Card information is not set");
     }
     parent::run();
-    try
-    {
-      $result = $this->_soapClient->runTransaction($this);
-    }
-    catch(\Exception $e)
-    {
-      throw new AfsException("AFS Request Failed: " . $e->getMessage());
-    }
-    $merchantReferenceCode = isset($result->merchantReferenceCode) ? $result->merchantReferenceCode : null;
-    $reply = new AfsReply($merchantReferenceCode, $result->requestID, $result->decision, $result->reasonCode, $result->requestToken);
-    //Check for errors
-    $reply->error = false;
-    if($result->reasonCode != "100")
-    {
-      $reply->error = ReasonCodes::lookup($result->reasonCode);
-      if($result->reasonCode == "101") //Missing field(s)
-      {
-        $fields = (array)$result->missingField;
-        foreach($fields as $field)
-        {
-          $reply->error .= $field . ",";
-        }
-      }
-      if($result->reasonCode == "102") //Invalid field(s)
-      {
-        $fields = (array)$result->invalidField;
-        foreach($fields as $field)
-        {
-          $reply->error .= $field . ",";
-        }
-      }
-    }
-    if(isset($result->afsReply))
-    {
-      $reply->afsResult = $result->afsReply->afsResult;
-      $reply->hostSeverity = $result->afsReply->hostSeverity;
-      $reply->consumerLocalTime = $result->afsReply->consumerLocalTime;
-      //AFS Factor Codes
-      $reply->afsFactorCodes = array();
-      foreach(explode($this->_replyDelimiter, $result->afsReply->afsFactorCode) as $factorCode)
-      {
-        $reply->afsFactorCodes[] = new AfsFactorCode($factorCode);
-      }
-      //Address Information Codes
-      $reply->addressInfoCodes = array();
-      foreach(explode($this->_replyDelimiter, $result->afsReply->addressInfoCode) as $addressInfoCode)
-      {
-        $reply->addressInfoCodes[] = new AddressInformationCode($addressInfoCode);
-      }
-      //Internet Information Codes
-      $reply->internetInfoCodes = array();
-      foreach(explode($this->_replyDelimiter, $result->afsReply->internetInfoCode) as $internetInfoCode)
-      {
-        $reply->internetInfoCodes[] = new InternetInformationCode($internetInfoCode);
-      }
-      //Velocity Information Codes
-      if(isset($result->afsReply->velocityInfoCode))
-      {
-        $reply->velocityInfoCodes = array();
-        foreach(explode($this->_replyDelimiter, $result->afsReply->velocityInfoCode) as $velocityCode)
-        {
-          $reply->velocityInfoCodes[] = new VelocityCode($velocityCode);
-        }
-      }
-      $reply->scoreModelUsed = $result->afsReply->scoreModelUsed;
-      $reply->binCountry = $result->afsReply->binCountry;
-      $reply->cardScheme = $result->afsReply->cardScheme;
-      $reply->cardIssuer = $result->afsReply->cardIssuer;
-      if(isset($result->decisionReply))
-      {
-        $reply->decisionReply = new DecisionReply(
-          $result->decisionReply->casePriority,
-          $result->decisionReply->activeProfileReply,
-          explode($this->_replyDelimiter, $result->decisionReply->velocityInfoCode)
-        );
-      }
-      if(isset($result->afsReply->deviceFingerprint))
-      {
-        $reply->deviceFingerprint = new DeviceFingerprint();
-        $reply->deviceFingerprint->cookiesEnabled = $result->afsReply->deviceFingerprint->cookiesEnabled;
-        $reply->deviceFingerprint->flashEnabled = $result->afsReply->deviceFingerprint->flashEnabled;
-        $reply->deviceFingerprint->hash = $result->afsReply->deviceFingerprint->hash;
-        $reply->deviceFingerprint->imagesEnabled = $result->afsReply->deviceFingerprint->imagesEnabled;
-        $reply->deviceFingerprint->javascriptEnabled = $result->afsReply->deviceFingerprint->javascriptEnabled;
-        $reply->deviceFingerprint->trueIPAddress = $result->afsReply->deviceFingerprint->trueIPAddress;
-        $reply->deviceFingerprint->trueIPAddressCity = $result->afsReply->deviceFingerprint->trueIPAddressCity;
-        $reply->deviceFingerprint->trueIPAddressCountry = $result->afsReply->deviceFingerprint->trueIPAddressCountry;
-        $reply->deviceFingerprint->smartID = $result->afsReply->deviceFingerprint->smartID;
-        $reply->deviceFingerprint->smartIDConfidenceLevel = $result->afsReply->deviceFingerprint->smartIDConfidenceLevel;
-        $reply->deviceFingerprint->screenResolution = $result->afsReply->deviceFingerprint->screenResolution;
-        $reply->deviceFingerprint->browserLanguage = $result->afsReply->deviceFingerprint->browserLanguage;
-      }
-    }
-    return $reply;
+    $result = $this->_soapClient->runTransaction($this);
+    return new AfsReply($result);
   }
 } 
