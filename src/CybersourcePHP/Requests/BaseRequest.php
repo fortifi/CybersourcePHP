@@ -21,8 +21,8 @@ class BaseRequest
 
   public function __construct($merchantID, $reference)
   {
-    $this->clientLibrary = "JDI";
-    $this->clientLibraryVersion = "0.1";
+    $this->clientLibrary = "CybersourcePHP";
+    $this->clientLibraryVersion = "1.0";
     $this->clientEnvironment = php_uname();
     $this->merchantID = $merchantID;
     $this->merchantReferenceCode = $reference;
@@ -56,7 +56,7 @@ class BaseRequest
         return $_SERVER[$header];
       }
     }
-    return "108.178.0.90"; //"0.0.0.0";
+    return "127.0.0.1"; //"0.0.0.0";
   }
 
   public function run()
