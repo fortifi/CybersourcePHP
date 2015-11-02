@@ -7,94 +7,120 @@ namespace CybersourcePHP\Replies;
 
 use CybersourcePHP\Structs\AddressInformationCode;
 use CybersourcePHP\Structs\AfsFactorCode;
-use CybersourcePHP\Structs\DecisionReply;
 use CybersourcePHP\Structs\DeviceFingerprint;
 use CybersourcePHP\Structs\InternetInformationCode;
-use CybersourcePHP\Structs\VelocityCode;
 
-class AfsReply extends BaseReply
+class AfsReply
 {
-  public $addressInfoCodes;
-  public $afsResult;
-  public $afsFactorCodes;
-  public $binCountry;
-  public $cardIssuer;
-  public $cardScheme;
-  public $consumerLocalTime;
-  public $decision;
-  public $decisionReply;
-  public $deviceFingerprint;
-  public $hostSeverity;
-  public $internetInfoCodes;
-  public $merchantReferenceCode;
-  public $scoreModelUsed;
-  public $velocityInfoCodes;
+  private $_addressInfoCodes;
+  private $_afsFactorCodes;
+  private $_afsResult;
+  private $_binCountry;
+  private $_cardIssuer;
+  private $_cardScheme;
+  private $_consumerLocalTime;
+  private $_hostSeverity;
+  private $_internetInfoCodes;
+  private $_scoreModelUsed;
 
-  public function __construct($response)
+  public function __construct($afsReply, $delimiter)
   {
-    parent::__construct($response);
-    $this->decision = $response->decision;
-    $this->merchantReferenceCode = isset($response->merchantReferenceCode) ? $response->merchantReferenceCode : null;
-    if(isset($response->afsReply))
+    //Address Information Codes
+    $this->_addressInfoCodes = array();
+    if(isset($afsReply->addressInfoCode))
     {
-      $this->afsResult = $response->afsReply->afsResult;
-      $this->hostSeverity = $response->afsReply->hostSeverity;
-      $this->consumerLocalTime = $response->afsReply->consumerLocalTime;
-      //AFS Factor Codes
-      $this->afsFactorCodes = array();
-      foreach(explode($this->_replyDelimiter, $response->afsReply->afsFactorCode) as $factorCode)
+      foreach(explode($delimiter, $afsReply->addressInfoCode) as $addressInfoCode)
       {
-        $this->afsFactorCodes[] = new AfsFactorCode($factorCode);
-      }
-      //Address Information Codes
-      $this->addressInfoCodes = array();
-      foreach(explode($this->_replyDelimiter, $response->afsReply->addressInfoCode) as $addressInfoCode)
-      {
-        $this->addressInfoCodes[] = new AddressInformationCode($addressInfoCode);
-      }
-      //Internet Information Codes
-      $this->internetInfoCodes = array();
-      foreach(explode($this->_replyDelimiter, $response->afsReply->internetInfoCode) as $internetInfoCode)
-      {
-        $this->internetInfoCodes[] = new InternetInformationCode($internetInfoCode);
-      }
-      //Velocity Information Codes
-      if(isset($response->afsReply->velocityInfoCode))
-      {
-        $this->velocityInfoCodes = array();
-        foreach(explode($this->_replyDelimiter, $response->afsReply->velocityInfoCode) as $velocityCode)
+        if($addressInfoCode != "")
         {
-          $this->velocityInfoCodes[] = new VelocityCode($velocityCode);
+          $this->_addressInfoCodes[] = new AddressInformationCode($addressInfoCode);
         }
       }
-      $this->scoreModelUsed = $response->afsReply->scoreModelUsed;
-      $this->binCountry = $response->afsReply->binCountry;
-      $this->cardScheme = $response->afsReply->cardScheme;
-      $this->cardIssuer = $response->afsReply->cardIssuer;
-      if(isset($response->decisionReply) && isset($response->decisionReply->velocityInfoCode))
+    }
+    //AFS Factor Codes
+    $this->_afsFactorCodes = array();
+    if(isset($afsReply->afsFactorCode))
+    {
+      foreach(explode($delimiter, $afsReply->afsFactorCode) as $factorCode)
       {
-        $this->decisionReply = new DecisionReply(
-          $response->decisionReply->casePriority,
-          $response->decisionReply->activeProfileReply,
-          explode($this->_replyDelimiter, $response->decisionReply->velocityInfoCode)
-        );
-      }
-      if(isset($response->afsReply->deviceFingerprint))
-      {
-        $this->deviceFingerprint = new DeviceFingerprint();
-        $this->deviceFingerprint->cookiesEnabled = $response->afsReply->deviceFingerprint->cookiesEnabled;
-        $this->deviceFingerprint->flashEnabled = $response->afsReply->deviceFingerprint->flashEnabled;
-        $this->deviceFingerprint->hash = $response->afsReply->deviceFingerprint->hash;
-        $this->deviceFingerprint->imagesEnabled = $response->afsReply->deviceFingerprint->imagesEnabled;
-        $this->deviceFingerprint->javascriptEnabled = $response->afsReply->deviceFingerprint->javascriptEnabled;
-        $this->deviceFingerprint->trueIPAddress = $response->afsReply->deviceFingerprint->trueIPAddress;
-        $this->deviceFingerprint->trueIPAddressCity = $response->afsReply->deviceFingerprint->trueIPAddressCity;
-        $this->deviceFingerprint->trueIPAddressCountry = $response->afsReply->deviceFingerprint->trueIPAddressCountry;
-        $this->deviceFingerprint->smartID = $response->afsReply->deviceFingerprint->smartID;
-        $this->deviceFingerprint->smartIDConfidenceLevel = $response->afsReply->deviceFingerprint->smartIDConfidenceLevel;
-        $this->deviceFingerprint->screenResolution = $response->afsReply->deviceFingerprint->screenResolution;
-        $this->deviceFingerprint->browserLanguage = $response->afsReply->deviceFingerprint->browserLanguage;
+        if($factorCode != "")
+        {
+          $this->_afsFactorCodes[] = new AfsFactorCode($factorCode);
+        }
       }
     }
+    $this->_afsResult = $afsReply->afsResult;
+    $this->_binCountry = $afsReply->binCountry;
+    $this->_cardScheme = $afsReply->cardScheme;
+    $this->_cardIssuer = $afsReply->cardIssuer;
+    $this->_consumerLocalTime = $afsReply->consumerLocalTime;
+    if(isset($afsReply->deviceFingerprint))
+    {
+      $this->_deviceFingerprint = new DeviceFingerprint($afsReply->deviceFingerprint);
+    }
+    $this->_hostSeverity = $afsReply->hostSeverity;
+    //Internet Information Codes
+    $this->_internetInfoCodes = array();
+    if(isset($afsReply->internetInfoCode))
+    {
+      foreach(explode($delimiter, $afsReply->internetInfoCode) as $internetInfoCode)
+      {
+        if($internetInfoCode != "")
+        {
+          $this->_internetInfoCodes[] = new InternetInformationCode($internetInfoCode);
+        }
+      }
+    }
+    $this->_scoreModelUsed = $afsReply->scoreModelUsed;
+  }
+
+  public function getAddressInfoCodes()
+  {
+    return $this->_addressInfoCodes;
+  }
+
+  public function getAfsFactorCodes()
+  {
+    return $this->_afsFactorCodes;
+  }
+
+  public function getAfsResult()
+  {
+    return $this->_afsResult;
+  }
+
+  public function getBinCountry()
+  {
+    return $this->_binCountry;
+  }
+
+  public function getCardIssuer()
+  {
+    return $this->_cardIssuer;
+  }
+
+  public function getCardScheme()
+  {
+    return $this->_cardScheme;
+  }
+
+  public function getConsumerLocalTime()
+  {
+    return $this->_consumerLocalTime;
+  }
+
+  public function getHostSeverity()
+  {
+    return $this->_hostSeverity;
+  }
+
+  public function getInternetInfoCodes()
+  {
+    return $this->_internetInfoCodes;
+  }
+
+  public function getScoreModelUsed()
+  {
+    return $this->_scoreModelUsed;
   }
 } 

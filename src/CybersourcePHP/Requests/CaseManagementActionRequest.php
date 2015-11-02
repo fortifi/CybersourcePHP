@@ -6,7 +6,7 @@
 namespace CybersourcePHP\Requests;
 
 use CybersourcePHP\Exceptions\CaseManagementActionException;
-use CybersourcePHP\Replies\CaseManagementActionReply;
+use CybersourcePHP\Replies\BaseReply;
 
 class CaseManagementActionRequest extends BaseRequest
 {
@@ -38,6 +38,6 @@ class CaseManagementActionRequest extends BaseRequest
     }
     parent::run();
     $result = $this->_soapClient->runTransaction($this);
-    return new CaseManagementActionReply($result);
+    return new BaseReply($result);
   }
 }

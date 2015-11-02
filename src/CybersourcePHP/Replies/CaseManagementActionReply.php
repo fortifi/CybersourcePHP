@@ -5,13 +5,17 @@
  */
 namespace CybersourcePHP\Replies;
 
-class CaseManagementActionReply extends BaseReply
+class CaseManagementActionReply
 {
-  public $code;
+  private $_reasonCode;
 
-  public function __construct($response)
+  public function __construct($caseManagementActionReply)
   {
-    parent::__construct($response);
-    $this->code = isset($response->caseManagementActionReply) ?  $response->caseManagementActionReply->reasonCode : -1;
+    $this->_reasonCode = isset($caseManagementActionReply->reasonCode) ? $caseManagementActionReply->reasonCode : -1;
+  }
+
+  public function getReasonCode()
+  {
+    return $this->_reasonCode;
   }
 }

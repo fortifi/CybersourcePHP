@@ -9,20 +9,30 @@ use CybersourcePHP\Lookups\RiskFactorCodes;
 
 class AfsFactorCode
 {
-  public $code;
-  public $description;
+  private $_code;
+  private $_description;
 
   public function __construct($code)
   {
-    $this->code = $code;
+    $this->_code = $code;
     $description = RiskFactorCodes::lookup($code);
     if(RiskFactorCodes::lookup($code))
     {
-      $this->description = $description;
+      $this->_description = $description;
     }
     else
     {
-      $this->description = "Unknown";
+      $this->_description = "Unknown";
     }
+  }
+
+  public function getCode()
+  {
+    return $this->_code;
+  }
+
+  public function getDescription()
+  {
+    return $this->_description;
   }
 } 

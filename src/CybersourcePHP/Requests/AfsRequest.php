@@ -11,7 +11,7 @@ use CybersourcePHP\Exceptions\AfsException;
 use CybersourcePHP\Lookups\AvsCodes;
 use CybersourcePHP\Lookups\CvCodes;
 use CybersourcePHP\Lookups\States;
-use CybersourcePHP\Replies\AfsReply;
+use CybersourcePHP\Replies\BaseReply;
 use CybersourcePHP\Structs\BillTo;
 use CybersourcePHP\Structs\Card;
 use CybersourcePHP\Structs\Item;
@@ -187,6 +187,6 @@ class AfsRequest extends BaseRequest
     }
     parent::run();
     $result = $this->_soapClient->runTransaction($this);
-    return new AfsReply($result);
+    return new BaseReply($result);
   }
 } 
