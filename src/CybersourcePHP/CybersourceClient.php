@@ -62,4 +62,9 @@ class CybersourceClient
     $request->setSoapClient($this->_soapClient);
     return $request;
   }
+
+  public function getLastRequest()
+  {
+    return $this->_soapClient->__getLastRequest();
+  }
 } 
