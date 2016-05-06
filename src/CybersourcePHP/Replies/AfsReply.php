@@ -50,9 +50,9 @@ class AfsReply
       }
     }
     $this->_afsResult = $afsReply->afsResult;
-    $this->_binCountry = $afsReply->binCountry;
-    $this->_cardScheme = $afsReply->cardScheme;
-    $this->_cardIssuer = $afsReply->cardIssuer;
+    $this->_binCountry = isset($afsReply->binCountry) ? $afsReply->binCountry : "";
+    $this->_cardScheme = isset($afsReply->cardScheme) ? $afsReply->cardScheme : "";
+    $this->_cardIssuer = isset($afsReply->cardIssuer) ? $afsReply->cardIssuer : "";
     $this->_consumerLocalTime = $afsReply->consumerLocalTime;
     if(isset($afsReply->deviceFingerprint))
     {
