@@ -49,7 +49,7 @@ class AfsReply
         }
       }
     }
-    $this->_afsResult = $afsReply->afsResult;
+    $this->_afsResult = isset($afsReply->afsResult) ? $afsReply->afsResult : "";
     $this->_binCountry = isset($afsReply->binCountry) ? $afsReply->binCountry : "";
     $this->_cardScheme = isset($afsReply->cardScheme) ? $afsReply->cardScheme : "";
     $this->_cardIssuer = isset($afsReply->cardIssuer) ? $afsReply->cardIssuer : "";
@@ -58,7 +58,7 @@ class AfsReply
     {
       $this->_deviceFingerprint = new DeviceFingerprint($afsReply->deviceFingerprint);
     }
-    $this->_hostSeverity = $afsReply->hostSeverity;
+    $this->_hostSeverity = isset($afsReply->hostSeverity) ? $afsReply->hostSeverity : "";
     //Internet Information Codes
     $this->_internetInfoCodes = array();
     if(isset($afsReply->internetInfoCode))
@@ -71,7 +71,7 @@ class AfsReply
         }
       }
     }
-    $this->_scoreModelUsed = $afsReply->scoreModelUsed;
+    $this->_scoreModelUsed = isset($afsReply->scoreModelUsed) ? $afsReply->scoreModelUsed : "";
   }
 
   public function getAddressInfoCodes()
@@ -123,4 +123,4 @@ class AfsReply
   {
     return $this->_scoreModelUsed;
   }
-} 
+}
