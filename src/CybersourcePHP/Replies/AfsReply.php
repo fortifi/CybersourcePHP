@@ -53,7 +53,7 @@ class AfsReply
     $this->_binCountry = isset($afsReply->binCountry) ? $afsReply->binCountry : "";
     $this->_cardScheme = isset($afsReply->cardScheme) ? $afsReply->cardScheme : "";
     $this->_cardIssuer = isset($afsReply->cardIssuer) ? $afsReply->cardIssuer : "";
-    $this->_consumerLocalTime = $afsReply->consumerLocalTime;
+    $this->_consumerLocalTime = isset($afsReply->consumerLocalTime) ? $afsReply->consumerLocalTime : "";
     if(isset($afsReply->deviceFingerprint))
     {
       $this->_deviceFingerprint = new DeviceFingerprint($afsReply->deviceFingerprint);
