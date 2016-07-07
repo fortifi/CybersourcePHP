@@ -29,7 +29,7 @@ class DecisionReply
         //Why must you do this?
         if(!is_array($decisionReply->activeProfileReply->rulesTriggered->ruleResultItem))
         {
-          $decisionReply->activeProfileReply->rulesTriggered->ruleREsultItem = array($decisionReply->activeProfileReply->rulesTriggered->ruleResultItem);
+          $decisionReply->activeProfileReply->rulesTriggered->ruleResultItem = array($decisionReply->activeProfileReply->rulesTriggered->ruleResultItem);
         }
         foreach($decisionReply->activeProfileReply->rulesTriggered->ruleResultItem as $rule)
         {
