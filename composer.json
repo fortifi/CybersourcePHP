@@ -1,7 +1,6 @@
 {
   "name": "samwaters/cybersourcephp",
   "descrtiption": "Cybersource API PHP Client",
-  "version": "1.0.0",
   "keywords": ["cybersource", "fraud", "php"],
   "homepage": "http://www.samwaters.com",
   "license": "DBAD",
