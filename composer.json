@@ -1,6 +1,6 @@
 {
   "name": "samwaters/cybersourcephp",
-  "descrtiption": "Cybersource API PHP Client",
+  "description": "Cybersource API PHP Client",
   "keywords": ["cybersource", "fraud", "php"],
   "homepage": "http://www.samwaters.com",
   "license": "DBAD",
