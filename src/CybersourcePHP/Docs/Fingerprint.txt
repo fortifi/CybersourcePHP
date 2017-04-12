@@ -1,35 +1,52 @@
 ---Prerequisites---
 Merchant ID
 Organisation ID
-Session Identifier
 Session Name
+Session Identifier
 
+---Terminology---
 Merchant ID and Organisation ID can be found from the Cybersource portal.
-Session Identifier is a unique string linked to this session. It can be anything / random, as long as it is unique
-Session Name is the Merchant ID followed by the Session Identifier
+Session Name is a unique string linked to this session. It can be anything / random, as long as it is unique
+Session Identifier is the Merchant ID followed by the Session Identifier
 
+---Example Values---
 For this example, the following values will be used:
 Merchant ID = 3941234567890123
 Organisation ID = a1bcd23e
-Session Identifier = CYBPHP1440600812 (The current unix timestamp, prefixed with a reference)
-Session Name = 3941234567890123CYBPHP1440600812
+Session Name = CYBPHP_1440600812 (The current unix timestamp, prefixed with a reference)
+Session Identifier = 3941234567890123CYBPHP_1440600812
 
---Client Side--
-Add the following HTML somewhere on the page(s) the user will visit
+---Notes---
+Due to requiring a Flash object, it's highly recommended you use an embed library to avoid plugin warnings when the user's browser does not support Flash
+This example uses SWFObject : https://github.com/swfobject/swfobject
+
+A good way to generate a random session name in PHP is:
+$sessionName = "CYBPHP_" . time() . "_" . substr(md5(mt_rand(0, mt_getrandmax())), 8, 8);
+
+---Client Side---
+Place the following HTML somewhere on the page(s) the user will visit
 <?php
-$org = "YOUR_ORG_ID";
-$session = "YOUR_SESSION_NAME";
+$merchantId = "3941234567890123";
+$org = "a1bcd23e";
+$sessionName = "CYBPHP_1440600812";
+$sessionId = $merchantId . $sessionName;
 ?>
-<p style="background:url(https://h.online-metrix.net/fp/clear.png?org_id=<?php echo $org; ?>&amp;session_id=<?php echo $session; ?>&amp;m=1)"></p>
-<img src="https://h.online-metrix.net/fp/clear.png?org_id=<?php echo $org; ?>&amp;session_id=<?php echo $session; ?>&amp;m=2" alt="" />
-<object type="application/x-shockwave-flash" data="https://h.online-metrix.net/fp/fp.swf?org_id=<?php echo $org; ?>&amp;session_id=<?php echo $session; ?>" width="1" height="1" id="thm_fp">
-  <param name="movie" value="https://h.online-metrix.net/fp/fp.swf?org_id=<?php echo $org; ?>&amp;session_id=<?php echo $session; ?>" />
-  <div></div>
-</object>
-<script src="https://h.online-metrix.net/fp/check.js?org_id=<?php echo $org; ?>&amp;session_id=<?php echo $session; ?>" type="text/javascript"></script>
+<p style="background:url(https://h.online-metrix.net/fp/clear.png?org_id=<?= $org; ?>&amp;session_id=<?= $sessionId; ?>&amp;m=1)"></p>
+<img src="https://h.online-metrix.net/fp/clear.png?org_id=<?= $org; ?>&amp;session_id=<?= $sessionId; ?>&amp;m=2" alt=""/>
+<div id="thm_fp"></div>
+<script type="text/javascript">
+  $(document).ready(function() {
+    if(typeof swfobject != "undefined")
+    {
+      swfobject.embedSWF("https://h.online-metrix.net/fp/fp.swf?org_id=<?= $org; ?>&session_id=<?= $sessionId; ?>", "thm_fp", "1", "1", "10.0.0");
+    }
+  });
+</script>
+<script src="https://h.online-metrix.net/fp/tags.js?org_id=<?= $org; ?>&amp;session_id=<?= $sessionId; ?>" type="text/javascript"></script>
 
---Server Side--
-Pass the session identifier (NOT the session name!) to the Cybersource API as deviceFingerprintID as part of the AFS request
-$afsRequest->deviceFingerprintID = "CYBPHP1440600812";
+---Server Side---
+Pass the session name (NOT the session identifier!) to the Cybersource API as deviceFingerprintID as part of the AFS request
+$afsRequest->deviceFingerprintID = "CYBPHP_1440600812"; //Note this is not prefixed by the merchant Id
 
+---Code Examples---
 See Examples\AFSRequest.php for code examples
