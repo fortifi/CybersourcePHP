@@ -43,6 +43,7 @@ class BaseReply
     }
     else
     {
+      $this->_decision = "UNKNOWN";
       $this->_error = ReasonCodes::lookup($response->reasonCode) . " ";
       if($response->reasonCode == "101") //Missing field(s)
       {
